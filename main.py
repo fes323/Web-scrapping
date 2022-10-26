@@ -18,19 +18,25 @@ article_title = soup.find_all('h2', class_='tm-article-snippet__title tm-article
 link = soup.find_all('a', class_='tm-article-snippet__title-link')  # ссылка
 
 
-habr_link = 'https://habr.com/'  #ссылка на хабр
-data_link = ''
+habr_link = 'https://habr.com/'  # ссылка на хабр
+data_link = ''  # временная ссылка для последующего объединения
 
-#Итоговый словарь
+# Итоговый словарь
 final_parse = {
     'date': '',
     'title': '',
     'link': '',
 }
 
-data_link = link.a['href']
-final_link = habr_link + data_link
+data_link = link.a['href']  # Получаем обрывок ссылки на статью
+final_link = habr_link + data_link  # Получаем итоговую ссылку
 
-print(post_date.time['datetime'])
-print(article_title.a.span.string)
-print(final_link)
+# Обновляем словарь
+final_parse.update({
+    'date': post_date.time['datetime'],
+    'title': article_title.a.span.string,
+    'link': final_link,
+})
+
+# Отображаем итог
+print(final_parse.values())
