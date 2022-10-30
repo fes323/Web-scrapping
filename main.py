@@ -1,5 +1,7 @@
 import requests
+from pprint import pprint
 from bs4 import BeautifulSoup as bs
+import re
 import pandas as pd
 
 
@@ -11,32 +13,39 @@ print(r.status_code)
 
 soup = bs(r.text, "html.parser")
 
-new_post = soup.find_all('article', class_='tm-articles-list__item')  # получаем самый первый пост полностью (последний)
+post_titles = []
+post_titles.append(soup.find_all('h2', attrs={'data-test-id': 'articleTitle'}))
 
-post_date = soup.find_all('span', class_='tm-article-snippet__datetime-published')  # дата публикации
-article_title = soup.find_all('h2', class_='tm-article-snippet__title tm-article-snippet__title_h2')  # заголовок
-link = soup.find_all('a', class_='tm-article-snippet__title-link')  # ссылка
+main_link = 'https://habr.com'
+links = []
+for item in post_titles:
+    for element in item:
+        links.append(element.find('a').get('href'))
 
-
-habr_link = 'https://habr.com/'  # ссылка на хабр
-data_link = ''  # временная ссылка для последующего объединения
-
-# Итоговый словарь
-final_parse = {
-    'date': '',
-    'title': '',
-    'link': '',
+my_dict = {
+    'Дата публикации:': '',
+    'Название статьи:': '',
+    'Ссылка:': '',
 }
+for link in links:
+    data_link = main_link + link
+    r = requests.get(data_link)
+    soup = bs(r.text, 'html.parser')
 
-data_link = link.a['href']  # Получаем обрывок ссылки на статью
-final_link = habr_link + data_link  # Получаем итоговую ссылку
+    data_post = soup.find_all('article', class_='tm-article-presenter__content tm-article-presenter__content_narrow')
+    for word in KEYWORDS:
+        N = +1
+        data = soup.find_all(KEYWORDS[N-1])
 
-# Обновляем словарь
-final_parse.update({
-    'date': post_date.time['datetime'],
-    'title': article_title.a.span.string,
-    'link': final_link,
-})
+    if data != None:
+        date_of_post = soup.find('time')['title']
+        title_of_post = soup.find('h1', class_='tm-article-snippet__title tm-article-snippet__title_h1')
+        my_dict.update({
+            'Дата публикации:': date_of_post,
+            'Название статьи:': title_of_post.get_text(),
+            'Ссылка:': data_link,
+        })
+        pprint(my_dict)
+    else:
+        pass
 
-# Отображаем итог
-print(final_parse.values())
